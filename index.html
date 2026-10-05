@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retail Empire Simulator 3D</title>
+  <meta name="description" content="Build your retail empire from a small shop to a mega supermarket. Manage inventory, customers, staff, and grow your business." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen">
+    <div class="loading-content">
+      <div class="game-logo">
+        <div class="logo-icon">🏪</div>
+        <h1>RETAIL EMPIRE</h1>
+        <span class="logo-sub">SIMULATOR 3D</span>
+      </div>
+      <div class="loading-bar-wrap">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+      <p class="loading-text" id="loading-text">Initializing World...</p>
+      <div class="loading-tips">
+        <p id="loading-tip">💡 Use Arrow Keys to move and mouse to look around</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div id="main-menu" class="hidden">
+    <div class="menu-bg"></div>
+    <div class="menu-content">
+      <div class="menu-logo">
+        <div class="logo-icon-lg">🏪</div>
+        <h1 class="menu-title">RETAIL EMPIRE</h1>
+        <p class="menu-subtitle">SIMULATOR 3D</p>
+        <p class="menu-tagline">Build your empire, one shelf at a time.</p>
+      </div>
+      <div class="menu-buttons">
+        <button class="menu-btn primary" id="btn-new-game">▶ New Game</button>
+        <button class="menu-btn" id="btn-continue" disabled>⚡ Continue</button>
+        <button class="menu-btn" id="btn-settings">⚙ Settings</button>
+        <button class="menu-btn" id="btn-credits">★ Credits</button>
+      </div>
+      <div class="menu-version">v1.0.0 | Windows PC Edition</div>
+    </div>
+  </div>
+
+  <!-- GAME HUD -->
+  <div id="game-hud" class="hidden">
+    <!-- Top Bar -->
+    <div class="hud-topbar">
+      <div class="hud-stat">
+        <span class="hud-icon">💰</span>
+        <span class="hud-label">Cash</span>
+        <span class="hud-val" id="hud-cash">$2,500</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-icon">📦</span>
+        <span class="hud-label">Orders</span>
+        <span class="hud-val" id="hud-orders">0</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-icon">👥</span>
+        <span class="hud-label">Customers</span>
+        <span class="hud-val" id="hud-customers">0</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-icon">⭐</span>
+        <span class="hud-label">Rating</span>
+        <span class="hud-val" id="hud-rating">★★★★☆</span>
+      </div>
+      <div class="hud-stat store-status">
+        <div class="store-toggle-wrap">
+          <span id="store-status-text">🔴 CLOSED</span>
+          <button class="store-toggle-btn" id="btn-toggle-store">Open Store</button>
+        </div>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-icon">🕐</span>
+        <span class="hud-val" id="hud-time">08:00 AM</span>
+      </div>
+    </div>
+
+    <!-- Bottom Info Bar -->
+    <div class="hud-bottombar">
+      <div class="hud-interact-hint" id="interact-hint"></div>
+      <div class="hud-controls"><span>WASD / Arrows Move</span><span>Shift Sprint</span><span>F Pick Up / Interact</span><span>Space Jump</span><span>ESC Pause / Menu</span></div>
+    </div>
+
+    <!-- Notification Area -->
+    <div id="notification-area"></div>
+
+    <!-- Carried Item Indicator -->
+    <div id="carried-item" class="hidden">
+      <div class="carried-item-inner">
+        <span id="carried-item-icon">📦</span>
+        <span id="carried-item-name">Item</span>
+        <span class="carried-hint">Use DROP to place crate</span>
+      </div>
+    </div>
+
+    <!-- Crosshair -->
+    <div class="crosshair">
+      <div class="ch-h"></div>
+      <div class="ch-v"></div>
+    </div>
+
+    <!-- Day Banner -->
+    <div id="day-banner" class="hidden">
+      <div class="day-banner-inner">
+        <span id="day-banner-text">Day 1 - Morning</span>
+      </div>
+    </div>
+
+    <!-- Weather Indicator -->
+    <div class="weather-indicator" id="weather-indicator">☀️</div>
+  </div>
+
+  <!-- INVENTORY PANEL -->
+  <div id="inventory-panel" class="panel hidden">
+    <div class="panel-header">
+      <h2>📦 Inventory</h2>
+      <button class="panel-close" onclick="UI.closePanel('inventory-panel')">✕</button>
+    </div>
+    <div class="panel-tabs">
+      <button class="tab-btn active" data-tab="inv-carried">Carried</button>
+      <button class="tab-btn" data-tab="inv-warehouse">Warehouse</button>
+      <button class="tab-btn" data-tab="inv-shelves">On Shelves</button>
+    </div>
+    <div class="panel-content" id="inv-carried">
+      <div class="inv-grid" id="inv-carried-grid"></div>
+    </div>
+    <div class="panel-content hidden" id="inv-warehouse">
+      <div class="inv-grid" id="inv-warehouse-grid"></div>
+    </div>
+    <div class="panel-content hidden" id="inv-shelves">
+      <div class="inv-grid" id="inv-shelves-grid"></div>
+    </div>
+  </div>
+
+  <!-- STORE COMPUTER UI -->
+  <div id="computer-ui" class="panel hidden">
+    <div class="computer-frame">
+      <div class="computer-header">
+        <div class="computer-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="computer-title">RetailOS™ v3.1</span>
+        <button class="panel-close" id="btn-close-computer">✕</button>
+      </div>
+      <div class="computer-desktop">
+        <div class="desktop-apps" id="desktop-apps">
+          <div class="desktop-app" data-app="ordering">
+            <div class="app-icon">🛒</div>
+            <span>Product Ordering</span>
+          </div>
+          <div class="desktop-app" data-app="inventory">
+            <div class="app-icon">📦</div>
+            <span>Inventory</span>
+          </div>
+          <div class="desktop-app" data-app="employees">
+            <div class="app-icon">👥</div>
+            <span>Employees</span>
+          </div>
+          <div class="desktop-app" data-app="finance">
+            <div class="app-icon">💹</div>
+            <span>Finance</span>
+          </div>
+          <div class="desktop-app" data-app="expansion">
+            <div class="app-icon">🏗️</div>
+            <span>Expansion</span>
+          </div>
+          <div class="desktop-app" data-app="pricing">
+            <div class="app-icon">🏷️</div>
+            <span>Pricing</span>
+          </div>
+          <div class="desktop-app" data-app="marketing">
+            <div class="app-icon">📢</div>
+            <span>Marketing</span>
+          </div>
+          <div class="desktop-app" data-app="reports">
+            <div class="app-icon">📊</div>
+            <span>Reports</span>
+          </div>
+          <div class="desktop-app" data-app="bank">
+            <div class="app-icon">🏦</div>
+            <span>Bank Loans</span>
+          </div>
+          <div class="desktop-app" data-app="reviews">
+            <div class="app-icon">⭐</div>
+            <span>Customer Reviews</span>
+          </div>
+        </div>
+
+        <!-- APP WINDOWS -->
+        <div class="app-window hidden" id="app-ordering">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>🛒 Product Ordering System</h3>
+          </div>
+          <div class="ordering-layout">
+            <div class="supplier-list" id="supplier-list"></div>
+            <div class="product-catalog" id="product-catalog"></div>
+            <div class="order-cart">
+              <h4>Order Cart</h4>
+              <div id="order-items"></div>
+              <div class="order-total">
+                <span>Total:</span>
+                <span id="order-total-val">$0.00</span>
+              </div>
+              <button class="btn-primary" id="btn-confirm-order">✅ Confirm Order</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-window hidden" id="app-employees">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>👥 Employee Management</h3>
+          </div>
+          <div id="employee-content"></div>
+        </div>
+
+        <div class="app-window hidden" id="app-finance">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>💹 Financial Dashboard</h3>
+          </div>
+          <div id="finance-content"></div>
+        </div>
+
+        <div class="app-window hidden" id="app-expansion">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>🏗️ Store Expansion</h3>
+          </div>
+          <div id="expansion-content"></div>
+        </div>
+
+        <div class="app-window hidden" id="app-pricing">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>🏷️ Price Management</h3>
+          </div>
+          <div id="pricing-content"></div>
+        </div>
+
+        <div class="app-window hidden" id="app-marketing">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>📢 Marketing Campaigns</h3>
+          </div>
+          <div id="marketing-content"></div>
+        </div>
+
+        <div class="app-window hidden" id="app-reports">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>📊 Sales Reports</h3>
+          </div>
+          <div id="reports-content"></div>
+        </div>
+
+        <div class="app-window hidden" id="app-inventory">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>📦 Inventory Management</h3>
+          </div>
+          <div id="inv-computer-content"></div>
+        </div>
+
+        <div class="app-window hidden" id="app-bank">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>🏦 Retail Capital & Bank Loans</h3>
+          </div>
+          <div id="bank-content"></div>
+        </div>
+
+        <div class="app-window hidden" id="app-reviews">
+          <div class="app-toolbar">
+            <button class="app-back" onclick="UI.showDesktop()">← Desktop</button>
+            <h3>⭐ Customer Reviews & Feedback</h3>
+          </div>
+          <div id="reviews-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKOUT UI -->
+  <div id="checkout-ui" class="panel hidden">
+    <div class="panel-header">
+      <h2>💳 Checkout Register</h2>
+      <button class="panel-close" id="btn-close-checkout">✕</button>
+    </div>
+    <div class="checkout-layout">
+      <div class="checkout-items-list">
+        <h4>Customer Items</h4>
+        <div id="checkout-items"></div>
+      </div>
+      <div class="checkout-register">
+        <div class="register-display">
+          <div class="register-total">
+            <span>TOTAL</span>
+            <span id="register-total">$0.00</span>
+          </div>
+          <div class="register-paid">
+            <span>PAID</span>
+            <span id="register-paid">$0.00</span>
+          </div>
+          <div class="register-change">
+            <span>CHANGE</span>
+            <span id="register-change">$0.00</span>
+          </div>
+        </div>
+        <div class="payment-btns">
+          <button class="pay-btn cash" id="btn-pay-cash">💵 Cash</button>
+          <button class="pay-btn card" id="btn-pay-card">💳 Card</button>
+        </div>
+        <div id="cash-input-wrap" class="hidden">
+          <input type="number" id="cash-input" placeholder="Enter cash amount" />
+          <button class="btn-primary" id="btn-process-cash">Process</button>
+        </div>
+        <div id="checkout-receipt" class="hidden">
+          <div class="receipt">
+            <h5>🧾 RECEIPT</h5>
+            <div id="receipt-content"></div>
+            <button class="btn-primary" id="btn-next-customer">Next Customer →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRICING POPUP -->
+  <div id="pricing-popup" class="panel hidden">
+    <div class="panel-header">
+      <h2>🏷️ Set Price</h2>
+      <button class="panel-close" onclick="UI.closePanel('pricing-popup')">✕</button>
+    </div>
+    <div id="pricing-popup-content"></div>
+  </div>
+
+  <!-- PAUSE MENU -->
+  <div id="pause-menu" class="hidden">
+    <div class="pause-overlay">
+      <div class="pause-content">
+        <h2>⏸ PAUSED</h2>
+        <button class="menu-btn primary" id="btn-resume">▶ Resume</button>
+        <button class="menu-btn" id="btn-save">💾 Save Game</button>
+        <button class="menu-btn" id="btn-load-pause">⚡ Load Game</button>
+        <button class="menu-btn" id="btn-settings-pause">⚙ Settings</button>
+        <button class="menu-btn danger" id="btn-main-menu">🏠 Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>⚙ Game Settings</h3>
+        <button class="panel-close" id="btn-close-settings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-title">Mouse Sensitivity</span>
+            <span class="setting-desc">Adjust camera rotation speed</span>
+          </div>
+          <div class="setting-control">
+            <input type="range" id="setting-sens" min="0.0005" max="0.005" step="0.0005" value="0.002" />
+            <span class="setting-val" id="setting-sens-val">2.0</span>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-title">Master Audio Volume</span>
+            <span class="setting-desc">Store & city ambient sound</span>
+          </div>
+          <div class="setting-control">
+            <input type="range" id="setting-volume" min="0" max="1" step="0.05" value="0.7" />
+            <span class="setting-val" id="setting-volume-val">70%</span>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-title">Field of View (FOV)</span>
+            <span class="setting-desc">Camera perspective angle</span>
+          </div>
+          <div class="setting-control">
+            <input type="range" id="setting-fov" min="60" max="95" step="1" value="72" />
+            <span class="setting-val" id="setting-fov-val">72°</span>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-title">Dynamic Shadows</span>
+            <span class="setting-desc">High-performance soft shadow mapping</span>
+          </div>
+          <div class="setting-control">
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-shadows" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="setting-item danger-zone">
+          <div class="setting-info">
+            <span class="setting-title" style="color:var(--danger)">Reset Saved Game</span>
+            <span class="setting-desc">Clear local progress and start completely fresh</span>
+          </div>
+          <button class="btn-danger-outline" id="btn-reset-save">Reset Progress</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="btn-save-settings">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREDITS MODAL -->
+  <div id="credits-modal" class="modal-overlay hidden">
+    <div class="modal-card credits-card">
+      <div class="modal-header">
+        <h3>★ Credits & About</h3>
+        <button class="panel-close" id="btn-close-credits">✕</button>
+      </div>
+      <div class="modal-body credits-body">
+        <div class="credits-logo">
+          <span style="font-size:48px;">🏪</span>
+          <h2>RETAIL EMPIRE</h2>
+          <p class="credits-version">v1.2.0 • Ultra 3D Windows Edition</p>
+        </div>
+        <p class="credits-text">
+          Retail Empire Simulator is a fully 3D supermarket management simulation built with Three.js, WebGL, and Vanilla JavaScript.
+        </p>
+        <div class="credits-grid">
+          <div class="credit-block">
+            <strong>🎮 Controls</strong>
+            <p>WASD / Arrows to Walk<br>Shift to Sprint • Space to Jump<br>F to Pick Up / Interact<br>Tab for Inventory • ESC for Menu</p>
+          </div>
+          <div class="credit-block">
+            <strong>🌟 Features</strong>
+            <p>Living 3D City Environment<br>Dynamic Day / Night Cycle<br>Full Inventory & Shelf Stocking<br>Staff Hiring & Store Expansions</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="btn-ok-credits">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TUTORIAL PANEL -->
+  <div id="tutorial-panel" class="hidden">
+    <div class="tutorial-box">
+      <div class="tutorial-step-badge" id="tutorial-step-badge">Step 1 / 13</div>
+      <div class="tutorial-icon" id="tutorial-icon">📦</div>
+      <h3 id="tutorial-title">Welcome to Retail Empire!</h3>
+      <p id="tutorial-desc">Walk outside and find the delivery crate near the entrance.</p>
+      <div class="tutorial-key-hints" id="tutorial-keys"></div>
+      <button class="btn-primary" id="btn-tutorial-next">Continue →</button>
+      <button class="btn-skip" id="btn-tutorial-skip">Skip Tutorial</button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION TOAST -->
+  <div id="toast-container"></div>
+
+  <!-- THREE.JS + GAME CANVAS -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/gamestate.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/customers.js"></script>
+  <script src="js/checkout.js"></script>
+  <script src="js/computer.js"></script>
+  <script src="js/tutorial.js"></script>
+  <script src="js/ambient.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
